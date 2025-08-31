@@ -1,0 +1,269 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Produits - Dashboard{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Produits</li>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="mb-3">
+            <i class="fas fa-tshirt me-2 text-primary"></i>
+            Gestion des Produits
+        </h2>
+    </div>
+</div>
+
+<!-- Statistiques -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card success">
+            <div class="card-body text-center">
+                <div class="stat-number">{{ total_products }}</div>
+                <div class="stat-label">Total des produits</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card info">
+            <div class="card-body text-center">
+                <div class="stat-number">{{ total_categories }}</div>
+                <div class="stat-label">Catégories</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card warning">
+            <div class="card-body text-center">
+                <div class="stat-number">{{ total_teams }}</div>
+                <div class="stat-label">Équipes</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card danger">
+            <div class="card-body text-center">
+                <div class="stat-number">{{ out_of_stock }}</div>
+                <div class="stat-label">En rupture</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtres -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="category" class="form-label">Catégorie</label>
+                        <select name="category" id="category" class="form-select">
+                            <option value="">Toutes les catégories</option>
+                            {% for category in categories %}
+                                <option value="{{ category.id }}" {% if category_filter == category.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="team" class="form-label">Équipe</label>
+                        <select name="team" id="team" class="form-select">
+                            <option value="">Toutes les équipes</option>
+                            {% for team in teams %}
+                                <option value="{{ team.id }}" {% if team_filter == team.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ team.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="availability" class="form-label">Disponibilité</label>
+                        <select name="availability" id="availability" class="form-select">
+                            <option value="">Tous</option>
+                            <option value="in_stock" {% if availability_filter == 'in_stock' %}selected{% endif %}>En stock</option>
+                            <option value="out_of_stock" {% if availability_filter == 'out_of_stock' %}selected{% endif %}>En rupture</option>
+                            <option value="on_sale" {% if availability_filter == 'on_sale' %}selected{% endif %}>En promotion</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-2"></i>Filtrer
+                            </button>
+                            <a href="{% url 'dashboard:products' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Réinitialiser
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Répartition par catégorie -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-tags me-2 text-primary"></i>
+                    Produits par catégorie
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for category in products_by_category %}
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h6 class="mb-0">{{ category.name }}</h6>
+                        <small class="text-muted">{{ category.product_count }} produit{{ category.product_count|pluralize }}</small>
+                    </div>
+                    <div class="progress flex-grow-1 mx-3" style="height: 8px;">
+                        <div class="progress-bar" style="width: {% widthratio category.product_count total_products 100 %}%"></div>
+                    </div>
+                    <span class="badge bg-primary">{{ category.product_count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-trophy me-2 text-warning"></i>
+                    Produits par équipe
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for team in products_by_team %}
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h6 class="mb-0">{{ team.name }}</h6>
+                        <small class="text-muted">{{ team.product_count }} produit{{ team.product_count|pluralize }}</small>
+                    </div>
+                    <div class="progress flex-grow-1 mx-3" style="height: 8px;">
+                        <div class="progress-bar bg-warning" style="width: {% widthratio team.product_count total_products 100 %}%"></div>
+                    </div>
+                    <span class="badge bg-warning">{{ team.product_count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Liste des produits -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list me-2 text-primary"></i>
+                    Liste des produits
+                </h5>
+                <a href="{% url 'admin:products_product_add' %}" class="btn btn-success btn-sm">
+                    <i class="fas fa-plus me-2"></i>Ajouter un produit
+                </a>
+            </div>
+            <div class="card-body">
+                {% if products %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Image</th>
+                                <th>Nom</th>
+                                <th>Catégorie</th>
+                                <th>Équipe</th>
+                                <th>Prix</th>
+                                <th>Stock</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in products %}
+                            <tr>
+                                <td>
+                                    {% if product.images.first %}
+                                        <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" 
+                                             class="rounded" style="width: 50px; height: 50px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                             style="width: 50px; height: 50px;">
+                                            <i class="fas fa-image text-muted"></i>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong>{{ product.name }}</strong>
+                                        {% if product.is_on_sale %}
+                                            <span class="badge bg-danger ms-2">Promo</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ product.category.name }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ product.team.name }}</span>
+                                </td>
+                                <td>
+                                                                         {% if product.is_on_sale %}
+                                        <div>
+                                            <span class="text-decoration-line-through text-muted">{{ product.price|floatformat:0 }} FCFA</span>
+                                            <br>
+                                            <span class="fw-bold text-danger">{{ product.current_price|floatformat:0 }} FCFA</span>
+                                        </div>
+                                    {% else %}
+                                        <span class="fw-bold">{{ product.price|floatformat:0 }} FCFA</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if product.stock_quantity > 0 %}
+                                        <span class="badge bg-success">{{ product.stock_quantity }}</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Rupture</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if product.is_available %}
+                                        <span class="badge bg-success">Disponible</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Indisponible</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'products:product_detail' product.slug %}" class="btn btn-sm btn-outline-primary" title="Voir">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'admin:products_product_change' product.id %}" class="btn btn-sm btn-outline-secondary" title="Modifier">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-tshirt fs-1 text-muted mb-3"></i>
+                    <p class="text-muted">Aucun produit trouvé avec ces critères</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

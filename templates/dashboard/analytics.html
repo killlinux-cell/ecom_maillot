@@ -1,0 +1,299 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Analyses - Dashboard{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Analyses</li>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="mb-3">
+            <i class="fas fa-chart-bar me-2 text-primary"></i>
+            Analyses et Statistiques
+        </h2>
+    </div>
+</div>
+
+<!-- Graphiques -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2 text-primary"></i>
+                    Commandes des 30 derniers jours
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="ordersChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-area me-2 text-success"></i>
+                    Chiffre d'affaires des 30 derniers jours
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Produits les plus vendus -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-trophy me-2 text-warning"></i>
+                    Produits les plus vendus
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if top_products %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Position</th>
+                                <th>Produit</th>
+                                <th>Quantité vendue</th>
+                                <th>Chiffre d'affaires</th>
+                                <th>Prix moyen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in top_products %}
+                            <tr>
+                                <td>
+                                    {% if forloop.counter == 1 %}
+                                        <i class="fas fa-medal text-warning fs-4"></i>
+                                    {% elif forloop.counter == 2 %}
+                                        <i class="fas fa-medal text-secondary fs-4"></i>
+                                    {% elif forloop.counter == 3 %}
+                                        <i class="fas fa-medal text-danger fs-4"></i>
+                                    {% else %}
+                                        <span class="badge bg-primary">#{{ forloop.counter }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <strong>{{ product.product_name }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success">{{ product.total_sold }}</span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold">{{ product.total_revenue|floatformat:0 }} FCFA</span>
+                                </td>
+                                <td>
+                                    <span class="text-muted">{% if product.total_sold > 0 %}{{ product.total_revenue|floatformat:0 }}{% else %}0{% endif %} FCFA</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-chart-bar fs-1 text-muted mb-3"></i>
+                    <p class="text-muted">Aucune vente enregistrée</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Catégories et équipes populaires -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-tags me-2 text-primary"></i>
+                    Catégories les plus populaires
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if top_categories %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Catégorie</th>
+                                <th>Ventes</th>
+                                <th>Pourcentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for category in top_categories %}
+                            <tr>
+                                <td>
+                                    <strong>{{ category.product__category__name }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">{{ category.total_sold }}</span>
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar" style="width: {% widthratio category.total_sold top_categories.0.total_sold 100 %}%">
+                                            {% widthratio category.total_sold top_categories.0.total_sold 100 %}%
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-tags fs-1 text-muted mb-3"></i>
+                    <p class="text-muted">Aucune donnée disponible</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-trophy me-2 text-warning"></i>
+                    Équipes les plus populaires
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if top_teams %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Équipe</th>
+                                <th>Ventes</th>
+                                <th>Pourcentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for team in top_teams %}
+                            <tr>
+                                <td>
+                                    <strong>{{ team.product__team__name }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-warning">{{ team.total_sold }}</span>
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar bg-warning" style="width: {% widthratio team.total_sold top_teams.0.total_sold 100 %}%">
+                                            {% widthratio team.total_sold top_teams.0.total_sold 100 %}%
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-trophy fs-1 text-muted mb-3"></i>
+                    <p class="text-muted">Aucune donnée disponible</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Graphique des commandes
+const ordersCtx = document.getElementById('ordersChart').getContext('2d');
+const ordersData = {{ daily_orders|safe }};
+
+new Chart(ordersCtx, {
+    type: 'line',
+    data: {
+        labels: ordersData.map(item => item.date),
+        datasets: [{
+            label: 'Commandes',
+            data: ordersData.map(item => item.count),
+            borderColor: '#28a745',
+            backgroundColor: 'rgba(40, 167, 69, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        }
+    }
+});
+
+// Graphique du chiffre d'affaires
+const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+const revenueData = {{ daily_revenue|safe }};
+
+new Chart(revenueCtx, {
+    type: 'area',
+    data: {
+        labels: revenueData.map(item => item.date),
+        datasets: [{
+            label: 'Chiffre d\'affaires (FCFA)',
+            data: revenueData.map(item => item.amount),
+            borderColor: '#0dcaf0',
+            backgroundColor: 'rgba(13, 202, 240, 0.2)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return value.toLocaleString() + ' FCFA';
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

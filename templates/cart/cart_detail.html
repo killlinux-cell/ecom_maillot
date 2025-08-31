@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+
+{% block title %}Mon Panier - Maillots de Football{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4"><i class="fas fa-shopping-cart me-2"></i>Mon Panier</h1>
+        </div>
+    </div>
+    
+    {% if cart %}
+        <div class="row">
+            <!-- Cart Items -->
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Articles dans votre panier</h5>
+                    </div>
+                    <div class="card-body">
+                        {% for item in cart_items %}
+                        <div class="row align-items-center mb-4 pb-4 border-bottom">
+                            <div class="col-md-2">
+                                {% if item.product.images.first %}
+                                    <img src="{{ item.product.images.first.image.url }}" class="img-fluid rounded" alt="{{ item.product.name }}">
+                                {% else %}
+                                    <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 80px;">
+                                        <i class="fas fa-image text-muted"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <h6 class="mb-1">{{ item.product.name }}</h6>
+                                <p class="text-muted mb-1">{{ item.product.team.name }}</p>
+                                <span class="badge bg-secondary">Taille: {{ item.size }}</span>
+                                
+                                <!-- Personnalisations -->
+                                {% if item.customizations %}
+                                <div class="mt-2">
+                                    <small class="text-primary">
+                                        <i class="fas fa-palette me-1"></i>Personnalisations:
+                                    </small>
+                                    <div class="mt-1">
+                                        {% for custom in item.customizations %}
+                                        <div class="small text-muted">
+                                            • {{ custom.customization.name }}
+                                            {% if custom.custom_text %}
+                                                : "{{ custom.custom_text }}"
+                                            {% endif %}
+                                            <span class="text-primary">(+{{ custom.price }} FCFA)</span>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-2">
+                                <div class="input-group" style="width: 120px;">
+                                    <button class="btn btn-outline-secondary btn-sm" type="button" onclick="updateQuantity({{ item.product.id }}, '{{ item.size }}', -1)">-</button>
+                                    <input type="number" class="form-control form-control-sm text-center" value="{{ item.quantity }}" min="1" max="99" onchange="updateQuantity({{ item.product.id }}, '{{ item.size }}', this.value, true)">
+                                    <button class="btn btn-outline-secondary btn-sm" type="button" onclick="updateQuantity({{ item.product.id }}, '{{ item.size }}', 1)">+</button>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-2 text-end">
+                                <span class="price">{{ item.total_price_with_customizations }} FCFA</span>
+                            </div>
+                            
+                            <div class="col-md-2 text-end">
+                                <button class="btn btn-outline-danger btn-sm" onclick="removeItem({{ item.product.id }}, '{{ item.size }}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        
+                        <div class="text-end">
+                            <a href="{% url 'cart:cart_clear' %}" class="btn btn-outline-secondary" onclick="return confirm('Êtes-vous sûr de vouloir vider votre panier ?')">
+                                <i class="fas fa-trash me-2"></i>Vider le panier
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Cart Summary -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Résumé de la commande</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Sous-total ({{ cart|length }} article(s)):</span>
+                            <span>{{ total_with_customizations }} FCFA</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Frais de livraison:</span>
+                            <span>1000 FCFA</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-3">
+                            <strong>Total:</strong>
+                            <strong class="price">{{ total_with_customizations|add:1000 }} FCFA</strong>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'orders:order_create' %}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-credit-card me-2"></i>Passer la commande
+                            </a>
+                            <a href="{% url 'products:product_list' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-arrow-left me-2"></i>Continuer les achats
+                            </a>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <small>Livraison gratuite pour les commandes supérieures à 50 000 FCFA</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="row">
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-shopping-cart text-muted" style="font-size: 4rem;"></i>
+                <h3 class="mt-3">Votre panier est vide</h3>
+                <p class="text-muted">Découvrez nos produits et commencez vos achats</p>
+                <a href="{% url 'products:product_list' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-shopping-bag me-2"></i>Voir nos produits
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateQuantity(productId, size, change, isDirect = false) {
+    let quantity;
+    
+    if (isDirect) {
+        quantity = parseInt(change);
+    } else {
+        const input = event.target.parentNode.querySelector('input');
+        quantity = parseInt(input.value) + parseInt(change);
+    }
+    
+    if (quantity <= 0) {
+        removeItem(productId, size);
+        return;
+    }
+    
+    // Créer le formulaire
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{% url "cart:cart_update" %}';
+    
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    const productIdInput = document.createElement('input');
+    productIdInput.type = 'hidden';
+    productIdInput.name = 'product_id';
+    productIdInput.value = productId;
+    
+    const sizeInput = document.createElement('input');
+    sizeInput.type = 'hidden';
+    sizeInput.name = 'size';
+    sizeInput.value = size;
+    
+    const quantityInput = document.createElement('input');
+    quantityInput.type = 'hidden';
+    quantityInput.name = 'quantity';
+    quantityInput.value = quantity;
+    
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'csrfmiddlewaretoken';
+    csrfInput.value = csrfToken;
+    
+    form.appendChild(productIdInput);
+    form.appendChild(sizeInput);
+    form.appendChild(quantityInput);
+    form.appendChild(csrfInput);
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function removeItem(productId, size) {
+    if (confirm('Êtes-vous sûr de vouloir retirer cet article du panier ?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{% url "cart:cart_remove" %}';
+        
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        const productIdInput = document.createElement('input');
+        productIdInput.type = 'hidden';
+        productIdInput.name = 'product_id';
+        productIdInput.value = productId;
+        
+        const sizeInput = document.createElement('input');
+        sizeInput.type = 'hidden';
+        sizeInput.name = 'size';
+        sizeInput.value = size;
+        
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        
+        form.appendChild(productIdInput);
+        form.appendChild(sizeInput);
+        form.appendChild(csrfInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,485 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.name }} - Maillots de Football{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Images du produit -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                {% if product.images.all %}
+                    <div id="productCarousel" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-inner">
+                            {% for image in product.images.all %}
+                            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                <img src="{{ image.image.url }}" class="d-block w-100" alt="{{ product.name }}" style="height: 400px; object-fit: cover;">
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% if product.images.count > 1 %}
+                        <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Précédent</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Suivant</span>
+                        </button>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Miniatures -->
+                    {% if product.images.count > 1 %}
+                    <div class="row mt-3">
+                        {% for image in product.images.all %}
+                        <div class="col-3">
+                            <img src="{{ image.image.url }}" class="img-thumbnail" alt="{{ product.name }}" 
+                                 style="height: 80px; object-fit: cover; cursor: pointer;"
+                                 onclick="$('#productCarousel').carousel({{ forloop.counter0 }})">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                {% else %}
+                    <div class="bg-light d-flex align-items-center justify-content-center" style="height: 400px;">
+                        <i class="fas fa-image text-muted" style="font-size: 4rem;"></i>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Informations du produit -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body">
+                    {% if product.is_on_sale %}
+                        <span class="badge badge-sale mb-2">-{{ product.discount_percentage }}%</span>
+                    {% endif %}
+                    
+                    <h1 class="card-title">{{ product.name }}</h1>
+                    <p class="text-muted">{{ product.team.name }} - {{ product.category.name }}</p>
+                    
+                    <div class="mb-3">
+                        {% if product.is_on_sale %}
+                            <span class="price fs-3">{{ product.current_price }} FCFA</span>
+                            <span class="price-old ms-2">{{ product.price }} FCFA</span>
+                        {% else %}
+                            <span class="price fs-3">{{ product.price }} FCFA</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <p class="card-text">{{ product.description }}</p>
+                    </div>
+                    
+                    <!-- Sélection de taille -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Taille :</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for size in product.available_sizes %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="size" id="size_{{ size }}" value="{{ size }}" required>
+                                <label class="form-check-label" for="size_{{ size }}">
+                                    {{ size }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Personnalisation du maillot -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-palette me-2"></i>Personnalisation (optionnel)
+                        </label>
+                        
+                        <!-- Nom et Numéro -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="customize_name" onchange="toggleCustomization('name')">
+                                    <label class="form-check-label fw-bold" for="customize_name">
+                                        Nom et Numéro (500 FCFA par caractère)
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="card-body" id="name_customization" style="display: none;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Nom :</label>
+                                        <input type="text" class="form-control" id="custom_name" placeholder="Votre nom" maxlength="15" oninput="updateNamePrice()">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Numéro :</label>
+                                        <input type="text" class="form-control" id="custom_number" placeholder="Numéro" maxlength="2" oninput="updateNamePrice()">
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-muted">Prix: <span id="name_price">0</span> FCFA</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Badges -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="customize_badges" onchange="toggleCustomization('badges')">
+                                    <label class="form-check-label fw-bold" for="customize_badges">
+                                        Badges/Emblèmes (500 FCFA chacun)
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="card-body" id="badges_customization" style="display: none;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="badge_liga" value="liga" onchange="updateBadgePrice()">
+                                            <label class="form-check-label" for="badge_liga">Liga</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="badge_uefa" value="uefa" onchange="updateBadgePrice()">
+                                            <label class="form-check-label" for="badge_uefa">UEFA</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="badge_champions" value="champions" onchange="updateBadgePrice()">
+                                            <label class="form-check-label" for="badge_champions">Champions League</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="badge_europa" value="europa" onchange="updateBadgePrice()">
+                                            <label class="form-check-label" for="badge_europa">Europa League</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="badge_premier" value="premier" onchange="updateBadgePrice()">
+                                            <label class="form-check-label" for="badge_premier">Premier League</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="badge_bundesliga" value="bundesliga" onchange="updateBadgePrice()">
+                                            <label class="form-check-label" for="badge_bundesliga">Bundesliga</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="badge_serie_a" value="serie_a" onchange="updateBadgePrice()">
+                                            <label class="form-check-label" for="badge_serie_a">Serie A</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="badge_ligue_1" value="ligue_1" onchange="updateBadgePrice()">
+                                            <label class="form-check-label" for="badge_ligue_1">Ligue 1</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-muted">Prix: <span id="badge_price">0</span> FCFA</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Résumé des personnalisations -->
+                        <div class="alert alert-info" id="customization_summary" style="display: none;">
+                            <h6><i class="fas fa-info-circle me-2"></i>Résumé des personnalisations</h6>
+                            <div id="customization_details"></div>
+                            <div class="mt-2">
+                                <strong>Prix total des personnalisations: <span id="total_customization_price">0</span> FCFA</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quantité -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Quantité :</label>
+                        <div class="input-group" style="width: 150px;">
+                            <button class="btn btn-outline-secondary" type="button" onclick="changeQuantity(-1)">-</button>
+                            <input type="number" class="form-control text-center" id="quantity" value="1" min="1" max="99">
+                            <button class="btn btn-outline-secondary" type="button" onclick="changeQuantity(1)">+</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Stock -->
+                    <div class="mb-3">
+                        {% if product.stock_quantity > 0 %}
+                            <span class="text-success"><i class="fas fa-check-circle me-2"></i>En stock ({{ product.stock_quantity }} disponibles)</span>
+                        {% else %}
+                            <span class="text-danger"><i class="fas fa-times-circle me-2"></i>Rupture de stock</span>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Boutons d'action -->
+                    <div class="d-grid gap-2">
+                        {% if product.stock_quantity > 0 %}
+                            <button class="btn btn-primary btn-lg" onclick="addToCart()">
+                                <i class="fas fa-cart-plus me-2"></i>Ajouter au panier
+                            </button>
+                        {% else %}
+                            <button class="btn btn-secondary btn-lg" disabled>
+                                <i class="fas fa-times me-2"></i>Indisponible
+                            </button>
+                        {% endif %}
+                        
+                        <a href="{% url 'products:product_list' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Retour aux produits
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Informations supplémentaires -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Informations du produit</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Équipe</h6>
+                            <p>{{ product.team.name }} ({{ product.team.country }})</p>
+                            
+                            <h6>Catégorie</h6>
+                            <p>{{ product.category.name }}</p>
+                            
+                            <h6>Tailles disponibles</h6>
+                            <p>{{ product.available_sizes|join:", " }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Matériau</h6>
+                            <p>Polyester de haute qualité, respirant et confortable</p>
+                            
+                            <h6>Entretien</h6>
+                            <p>Lavage à 30°C, ne pas repasser</p>
+                            
+                            <h6>Garantie</h6>
+                            <p>Garantie qualité 30 jours</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Produits similaires -->
+    {% if similar_products %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3 class="mb-4">Produits similaires</h3>
+            <div class="row">
+                {% for similar_product in similar_products %}
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="card h-100">
+                        {% if similar_product.is_on_sale %}
+                            <span class="badge badge-sale">-{{ similar_product.discount_percentage }}%</span>
+                        {% endif %}
+                        
+                        <div class="position-relative">
+                            {% if similar_product.images.first %}
+                                <img src="{{ similar_product.images.first.image.url }}" class="card-img-top" alt="{{ similar_product.name }}" style="height: 200px; object-fit: cover;">
+                            {% else %}
+                                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                    <i class="fas fa-image text-muted" style="font-size: 2rem;"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="card-body d-flex flex-column">
+                            <h6 class="card-title">{{ similar_product.name }}</h6>
+                            <p class="card-text text-muted small">{{ similar_product.team.name }}</p>
+                            
+                            <div class="mt-auto">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    {% if similar_product.is_on_sale %}
+                                        <span class="price">{{ similar_product.current_price }} FCFA</span>
+                                        <span class="price-old">{{ similar_product.price }} FCFA</span>
+                                    {% else %}
+                                        <span class="price">{{ similar_product.price }} FCFA</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <a href="{{ similar_product.get_absolute_url }}" class="btn btn-outline-primary btn-sm w-100">
+                                    <i class="fas fa-eye me-1"></i>Voir
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Formulaire caché pour l'ajout au panier -->
+<form id="addToCartForm" method="POST" action="{% url 'cart:cart_add' %}" style="display: none;">
+    {% csrf_token %}
+    <input type="hidden" name="product_id" value="{{ product.id }}">
+    <input type="hidden" name="size" id="selectedSize">
+    <input type="hidden" name="quantity" id="selectedQuantity">
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Variables globales pour les personnalisations
+let namePrice = 0;
+let badgePrice = 0;
+
+function changeQuantity(change) {
+    const input = document.getElementById('quantity');
+    const newValue = parseInt(input.value) + change;
+    if (newValue >= 1 && newValue <= 99) {
+        input.value = newValue;
+    }
+}
+
+function toggleCustomization(type) {
+    const checkbox = document.getElementById(`customize_${type}`);
+    const container = document.getElementById(`${type}_customization`);
+    
+    if (checkbox.checked) {
+        container.style.display = 'block';
+    } else {
+        container.style.display = 'none';
+        // Réinitialiser les prix
+        if (type === 'name') {
+            document.getElementById('custom_name').value = '';
+            document.getElementById('custom_number').value = '';
+            namePrice = 0;
+            document.getElementById('name_price').textContent = '0';
+        } else if (type === 'badges') {
+            // Décocher tous les badges
+            const badges = document.querySelectorAll('input[id^="badge_"]');
+            badges.forEach(badge => badge.checked = false);
+            badgePrice = 0;
+            document.getElementById('badge_price').textContent = '0';
+        }
+        updateCustomizationSummary();
+    }
+}
+
+function updateNamePrice() {
+    const name = document.getElementById('custom_name').value;
+    const number = document.getElementById('custom_number').value;
+    const totalChars = name.length + number.length;
+    
+    namePrice = totalChars * 500; // 500 FCFA par caractère
+    document.getElementById('name_price').textContent = namePrice;
+    updateCustomizationSummary();
+}
+
+function updateBadgePrice() {
+    const badges = document.querySelectorAll('input[id^="badge_"]:checked');
+    badgePrice = badges.length * 500; // 500 FCFA par badge
+    document.getElementById('badge_price').textContent = badgePrice;
+    updateCustomizationSummary();
+}
+
+function updateCustomizationSummary() {
+    const totalPrice = namePrice + badgePrice;
+    const summary = document.getElementById('customization_summary');
+    const details = document.getElementById('customization_details');
+    const totalPriceSpan = document.getElementById('total_customization_price');
+    
+    if (totalPrice > 0) {
+        let detailsHtml = '';
+        
+        // Détails du nom/numéro
+        if (namePrice > 0) {
+            const name = document.getElementById('custom_name').value;
+            const number = document.getElementById('custom_number').value;
+            if (name || number) {
+                detailsHtml += `<div>• Nom/Numéro: "${name} ${number}" - ${namePrice} FCFA</div>`;
+            }
+        }
+        
+        // Détails des badges
+        if (badgePrice > 0) {
+            const selectedBadges = [];
+            const badges = document.querySelectorAll('input[id^="badge_"]:checked');
+            badges.forEach(badge => {
+                const label = badge.nextElementSibling.textContent;
+                selectedBadges.push(label);
+            });
+            if (selectedBadges.length > 0) {
+                detailsHtml += `<div>• Badges: ${selectedBadges.join(', ')} - ${badgePrice} FCFA</div>`;
+            }
+        }
+        
+        details.innerHTML = detailsHtml;
+        totalPriceSpan.textContent = totalPrice;
+        summary.style.display = 'block';
+    } else {
+        summary.style.display = 'none';
+    }
+}
+
+function addToCart() {
+    const selectedSize = document.querySelector('input[name="size"]:checked');
+    const quantity = document.getElementById('quantity').value;
+    
+    if (!selectedSize) {
+        alert('Veuillez sélectionner une taille');
+        return;
+    }
+    
+    if (quantity < 1) {
+        alert('La quantité doit être supérieure à 0');
+        return;
+    }
+    
+    // Récupérer les personnalisations
+    const customizations = [];
+    
+    // Nom et numéro
+    if (document.getElementById('customize_name').checked) {
+        const name = document.getElementById('custom_name').value;
+        const number = document.getElementById('custom_number').value;
+        if (name || number) {
+            customizations.push({
+                type: 'name',
+                name: name,
+                number: number,
+                price: namePrice
+            });
+        }
+    }
+    
+    // Badges
+    if (document.getElementById('customize_badges').checked) {
+        const badges = document.querySelectorAll('input[id^="badge_"]:checked');
+        badges.forEach(badge => {
+            customizations.push({
+                type: 'badge',
+                badge_type: badge.value,
+                price: 500
+            });
+        });
+    }
+    
+    // Ajouter les personnalisations au formulaire
+    const form = document.getElementById('addToCartForm');
+    
+    // Supprimer les anciens champs de personnalisation
+    const oldCustomizations = form.querySelectorAll('input[name^="customization_"]');
+    oldCustomizations.forEach(field => field.remove());
+    
+    // Ajouter les nouvelles personnalisations
+    customizations.forEach((custom, index) => {
+        Object.keys(custom).forEach(key => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = `customization_${index}_${key}`;
+            input.value = custom[key];
+            form.appendChild(input);
+        });
+    });
+    
+    document.getElementById('selectedSize').value = selectedSize.value;
+    document.getElementById('selectedQuantity').value = quantity;
+    form.submit();
+}
+</script>
+{% endblock %}

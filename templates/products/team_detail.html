@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ team.name }} - Maillots de Football{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'products:home' %}">Accueil</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'products:product_list' %}">Produits</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ team.name }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="mb-2">{{ team.name }}</h1>
+                    <p class="text-muted mb-0">{{ team.country }}</p>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-primary fs-6">{{ products.paginator.count }} produit(s)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Informations de l'équipe -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5>À propos de {{ team.name }}</h5>
+                            <p class="text-muted">
+                                Découvrez notre collection complète de maillots officiels de {{ team.name }}. 
+                                Des maillots domicile, extérieur et troisième tenue, tous disponibles dans différentes tailles.
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="d-flex flex-column">
+                                <span class="badge bg-secondary mb-2">{{ team.country }}</span>
+                                <small class="text-muted">Équipe officielle</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filtres -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Catégorie</label>
+                            <select name="category" class="form-select">
+                                <option value="">Toutes les catégories</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ category.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Prix</label>
+                            <select name="price_range" class="form-select">
+                                <option value="">Tous les prix</option>
+                                <option value="0-10000" {% if request.GET.price_range == "0-10000" %}selected{% endif %}>0 - 10 000 FCFA</option>
+                                <option value="10000-20000" {% if request.GET.price_range == "10000-20000" %}selected{% endif %}>10 000 - 20 000 FCFA</option>
+                                <option value="20000-30000" {% if request.GET.price_range == "20000-30000" %}selected{% endif %}>20 000 - 30 000 FCFA</option>
+                                <option value="30000+" {% if request.GET.price_range == "30000+" %}selected{% endif %}>30 000+ FCFA</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Disponibilité</label>
+                            <select name="availability" class="form-select">
+                                <option value="">Tous</option>
+                                <option value="in_stock" {% if request.GET.availability == "in_stock" %}selected{% endif %}>En stock</option>
+                                <option value="on_sale" {% if request.GET.availability == "on_sale" %}selected{% endif %}>En promotion</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-filter me-2"></i>Filtrer
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if products %}
+        <div class="row">
+            {% for product in products %}
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card h-100 product-card">
+                    {% if product.is_on_sale %}
+                        <span class="badge badge-sale">-{{ product.discount_percentage }}%</span>
+                    {% endif %}
+                    
+                    <div class="position-relative">
+                        {% if product.images.first %}
+                            <img src="{{ product.images.first.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 250px; object-fit: cover;">
+                        {% else %}
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 250px;">
+                                <i class="fas fa-image text-muted" style="font-size: 3rem;"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ product.name }}</h5>
+                        <p class="card-text text-muted">{{ product.category.name }}</p>
+                        
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                {% if product.is_on_sale %}
+                                    <span class="price">{{ product.current_price }} FCFA</span>
+                                    <span class="price-old">{{ product.price }} FCFA</span>
+                                {% else %}
+                                    <span class="price">{{ product.price }} FCFA</span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <a href="{{ product.get_absolute_url }}" class="btn btn-primary">
+                                    <i class="fas fa-eye me-2"></i>Voir détails
+                                </a>
+                                {% if product.stock_quantity > 0 %}
+                                    <button class="btn btn-outline-primary" onclick="addToCart({{ product.id }})">
+                                        <i class="fas fa-cart-plus me-2"></i>Ajouter au panier
+                                    </button>
+                                {% else %}
+                                    <button class="btn btn-outline-secondary" disabled>
+                                        <i class="fas fa-times me-2"></i>Indisponible
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if products.has_other_pages %}
+        <nav aria-label="Pagination des produits" class="mt-5">
+            <ul class="pagination justify-content-center">
+                {% if products.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ products.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+                
+                {% for num in products.paginator.page_range %}
+                    {% if products.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if products.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ products.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+    {% else %}
+        <div class="row">
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-search text-muted" style="font-size: 4rem;"></i>
+                <h3 class="mt-3">Aucun produit trouvé</h3>
+                <p class="text-muted">Aucun produit ne correspond à vos critères de recherche</p>
+                <a href="{% url 'products:team_detail' team.slug %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-arrow-left me-2"></i>Voir tous les produits
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Formulaire caché pour l'ajout au panier -->
+<form id="addToCartForm" method="POST" action="{% url 'cart:cart_add' %}" style="display: none;">
+    {% csrf_token %}
+    <input type="hidden" name="product_id" id="productId">
+    <input type="hidden" name="size" id="selectedSize">
+    <input type="hidden" name="quantity" value="1">
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function addToCart(productId) {
+    // Demander la taille à l'utilisateur
+    const size = prompt('Choisissez votre taille (XS, S, M, L, XL, XXL, XXXL):');
+    if (!size) return;
+    
+    // Remplir le formulaire caché
+    document.getElementById('productId').value = productId;
+    document.getElementById('selectedSize').value = size;
+    
+    // Soumettre le formulaire
+    document.getElementById('addToCartForm').submit();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load account socialaccount %}
+{% load crispy_forms_tags %}
+
+{% block title %}Connexion - Maillots de Football{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5">
+                    <!-- Logo et titre -->
+                    <div class="text-center mb-4">
+                        <i class="fas fa-user-circle fa-3x text-primary mb-3"></i>
+                        <h2 class="fw-bold text-dark">Connexion</h2>
+                        <p class="text-muted">Accédez à votre compte</p>
+                    </div>
+
+                    <!-- Messages d'erreur -->
+                    {% if form.errors %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Erreur de connexion :</strong>
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for error in form.non_field_errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endif %}
+
+                    <!-- Formulaire de connexion -->
+                    <form method="POST" action="{% url 'account_login' %}" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Email -->
+                        <div class="mb-3">
+                            <label for="{{ form.login.id_for_label }}" class="form-label">
+                                <i class="fas fa-envelope me-2"></i>Adresse email
+                            </label>
+                            {{ form.login }}
+                            {% if form.login.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.login.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Mot de passe -->
+                        <div class="mb-3">
+                            <label for="{{ form.password.id_for_label }}" class="form-label">
+                                <i class="fas fa-lock me-2"></i>Mot de passe
+                            </label>
+                            {{ form.password }}
+                            {% if form.password.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.password.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Se souvenir de moi -->
+                        <div class="mb-3 form-check">
+                            {{ form.remember }}
+                            <label class="form-check-label" for="{{ form.remember.id_for_label }}">
+                                Se souvenir de moi
+                            </label>
+                        </div>
+
+                        <!-- Bouton de connexion -->
+                        <div class="d-grid mb-3">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i>
+                                Se connecter
+                            </button>
+                        </div>
+
+                        <!-- Liens utiles -->
+                        <div class="text-center">
+                            <p class="mb-2">
+                                <a href="{% url 'account_reset_password' %}" class="text-decoration-none">
+                                    <i class="fas fa-key me-1"></i>Mot de passe oublié ?
+                                </a>
+                            </p>
+                            <hr class="my-3">
+                            <p class="mb-0">
+                                Pas encore de compte ? 
+                                <a href="{% url 'account_signup' %}" class="text-decoration-none fw-bold">
+                                    Créer un compte
+                                </a>
+                            </p>
+                        </div>
+
+                        {% if redirect_field_value %}
+                            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border-radius: 15px;
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.btn-primary {
+    background: linear-gradient(45deg, #007bff, #0056b3);
+    border: none;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(45deg, #0056b3, #004085);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4);
+}
+
+.form-control {
+    border-radius: 10px;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.alert {
+    border-radius: 10px;
+    border: none;
+}
+
+.fa-user-circle {
+    background: linear-gradient(45deg, #007bff, #0056b3);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+</style>
+{% endblock %}

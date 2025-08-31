@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load cart_extras %}
+
+{% block title %}Créer une commande - Maillots de Football{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4"><i class="fas fa-shopping-bag me-2"></i>Finaliser la commande</h1>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Order Summary -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Résumé de votre commande</h5>
+                </div>
+                <div class="card-body">
+                    {% for item in cart %}
+                    <div class="row align-items-center mb-3 pb-3 border-bottom">
+                        <div class="col-md-2">
+                            {% if item.product.images.first %}
+                                <img src="{{ item.product.images.first.image.url }}" class="img-fluid rounded" alt="{{ item.product.name }}">
+                            {% else %}
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 60px;">
+                                    <i class="fas fa-image text-muted"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="mb-1">{{ item.product.name }}</h6>
+                            <p class="text-muted mb-1">{{ item.product.team.name }}</p>
+                            <span class="badge bg-secondary">Taille: {{ item.size }}</span>
+                            
+                            <!-- Afficher les personnalisations -->
+                            {% with cart_item=item|get_cart_item:user %}
+                                {% if cart_item.customizations.all %}
+                                    <div class="mt-2">
+                                        <small class="text-primary">
+                                            <i class="fas fa-palette me-1"></i>Personnalisations:
+                                        </small>
+                                        <div class="ms-3">
+                                            {% for custom in cart_item.customizations.all %}
+                                                <small class="d-block text-muted">
+                                                    • {{ custom.customization.name }}
+                                                    {% if custom.custom_text %}
+                                                        : "{{ custom.custom_text }}"
+                                                    {% endif %}
+                                                    <span class="text-primary">(+{{ custom.price }} FCFA)</span>
+                                                </small>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                        
+                        <div class="col-md-2 text-center">
+                            <span class="text-muted">Quantité: {{ item.quantity }}</span>
+                        </div>
+                        
+                        <div class="col-md-2 text-end">
+                            <span class="price">{{ item.total_price }} FCFA</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-8 text-end">
+                            <strong>Sous-total:</strong>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <strong>{{ cart.get_total_price }} FCFA</strong>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-8 text-end">
+                            <strong>Frais de livraison:</strong>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <strong>1000 FCFA</strong>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row">
+                        <div class="col-md-8 text-end">
+                            <h5>Total:</h5>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <h5 class="price">{{ cart.get_total_price|add:1000 }} FCFA</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Shipping Address -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Adresse de livraison</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        {% if user.addresses.all %}
+                            <div class="mb-3">
+                                <label class="form-label">Choisir une adresse existante:</label>
+                                <select name="shipping_address" class="form-select">
+                                    <option value="">Sélectionner une adresse</option>
+                                    {% for address in user.addresses.all %}
+                                    <option value="{{ address.id }}">
+                                        {{ address.first_name }} {{ address.last_name }} - {{ address.address }}, {{ address.city }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="text-center mb-3">
+                                <span class="text-muted">ou</span>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="mb-3">
+                            <a href="{% url 'orders:address_create' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-plus me-2"></i>Ajouter une nouvelle adresse
+                            </a>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes spéciales (optionnel)</label>
+                            <textarea name="notes" id="notes" class="form-control" rows="3" placeholder="Instructions spéciales pour la livraison..."></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Méthode de paiement</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="payment_method" id="paydunya" value="paydunya" checked>
+                                <label class="form-check-label" for="paydunya">
+                                    <i class="fas fa-credit-card text-primary me-2"></i>
+                                    PayDunya (Wave, Orange Money, etc.)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="payment_method" id="wave_direct" value="wave_direct">
+                                <label class="form-check-label" for="wave_direct">
+                                    <i class="fas fa-mobile-alt text-success me-2"></i>
+                                    Wave Direct (Paiement manuel)
+                                </label>
+                            </div>
+
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-credit-card me-2"></i>Procéder au paiement
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Order Info -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Informations de commande</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6><i class="fas fa-shipping-fast text-primary me-2"></i>Livraison</h6>
+                        <p class="text-muted small">Livraison standard en 24-48h en Côte d'Ivoire</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6><i class="fas fa-credit-card text-primary me-2"></i>Paiement</h6>
+                        <p class="text-muted small">Paiement sécurisé via Wave Côte d'Ivoire</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6><i class="fas fa-shield-alt text-primary me-2"></i>Garantie</h6>
+                        <p class="text-muted small">Garantie qualité 30 jours</p>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <small>Vous recevrez un email de confirmation une fois votre commande validée.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

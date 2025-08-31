@@ -1,0 +1,262 @@
+{% extends 'base.html' %}
+
+{% block title %}Produits - Maillots de Football{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Sidebar Filters -->
+        <div class="col-lg-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filtres</h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" action="{% url 'products:product_list' %}">
+                        <!-- Search -->
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Nom du produit</label>
+                            <input type="text" class="form-control" id="name" name="name" value="{{ request.GET.name }}" placeholder="Rechercher...">
+                        </div>
+                        
+                        <!-- Category -->
+                        <div class="mb-3">
+                            <label for="category" class="form-label">Catégorie</label>
+                            <select class="form-select" id="category" name="category">
+                                <option value="">Toutes les catégories</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Team -->
+                        <div class="mb-3">
+                            <label for="team" class="form-label">Équipe</label>
+                            <select class="form-select" id="team" name="team">
+                                <option value="">Toutes les équipes</option>
+                                {% for team in teams %}
+                                <option value="{{ team.id }}" {% if request.GET.team == team.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ team.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Price Range -->
+                        <div class="mb-3">
+                            <label class="form-label">Prix</label>
+                            <div class="row">
+                                <div class="col-6">
+                                    <input type="number" class="form-control" name="min_price" value="{{ request.GET.min_price }}" placeholder="Min">
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" class="form-control" name="max_price" value="{{ request.GET.max_price }}" placeholder="Max">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Size -->
+                        <div class="mb-3">
+                            <label for="size" class="form-label">Taille</label>
+                            <select class="form-select" id="size" name="size">
+                                <option value="">Toutes les tailles</option>
+                                <option value="XS" {% if request.GET.size == 'XS' %}selected{% endif %}>XS</option>
+                                <option value="S" {% if request.GET.size == 'S' %}selected{% endif %}>S</option>
+                                <option value="M" {% if request.GET.size == 'M' %}selected{% endif %}>M</option>
+                                <option value="L" {% if request.GET.size == 'L' %}selected{% endif %}>L</option>
+                                <option value="XL" {% if request.GET.size == 'XL' %}selected{% endif %}>XL</option>
+                                <option value="XXL" {% if request.GET.size == 'XXL' %}selected{% endif %}>XXL</option>
+                                <option value="XXXL" {% if request.GET.size == 'XXXL' %}selected{% endif %}>XXXL</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Checkboxes -->
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="on_sale" name="on_sale" value="true" {% if request.GET.on_sale %}checked{% endif %}>
+                                <label class="form-check-label" for="on_sale">
+                                    En promotion
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="in_stock" name="in_stock" value="true" {% if request.GET.in_stock %}checked{% endif %}>
+                                <label class="form-check-label" for="in_stock">
+                                    En stock
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Buttons -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-2"></i>Filtrer
+                            </button>
+                            <a href="{% url 'products:product_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Effacer
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Products Grid -->
+        <div class="col-lg-9">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Produits</h2>
+                <div class="d-flex align-items-center">
+                    <span class="text-muted me-3">{{ products.paginator.count }} produit(s) trouvé(s)</span>
+                    <select class="form-select" style="width: auto;">
+                        <option>Trier par</option>
+                        <option>Prix croissant</option>
+                        <option>Prix décroissant</option>
+                        <option>Nouveautés</option>
+                        <option>Popularité</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Products -->
+            <div class="row">
+                {% for product in products %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100">
+                        {% if product.is_on_sale %}
+                            <span class="badge badge-sale">-{{ product.discount_percentage }}%</span>
+                        {% endif %}
+                        
+                        <div class="position-relative">
+                            {% if product.images.first %}
+                                <img src="{{ product.images.first.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 250px; object-fit: cover;">
+                            {% else %}
+                                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 250px;">
+                                    <i class="fas fa-image text-muted" style="font-size: 3rem;"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ product.name }}</h5>
+                            <p class="card-text text-muted">{{ product.team.name }}</p>
+                            
+                            <div class="mt-auto">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    {% if product.is_on_sale %}
+                                        <span class="price">{{ product.current_price }} FCFA</span>
+                                        <span class="price-old">{{ product.price }} FCFA</span>
+                                    {% else %}
+                                        <span class="price">{{ product.price }} FCFA</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="d-grid gap-2">
+                                    <a href="{{ product.get_absolute_url }}" class="btn btn-primary">
+                                        <i class="fas fa-eye me-2"></i>Voir détails
+                                    </a>
+                                    <button class="btn btn-outline-primary" onclick="addToCart({{ product.id }})">
+                                        <i class="fas fa-cart-plus me-2"></i>Ajouter au panier
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-5">
+                    <i class="fas fa-search text-muted" style="font-size: 4rem;"></i>
+                    <h4 class="mt-3">Aucun produit trouvé</h4>
+                    <p class="text-muted">Essayez de modifier vos critères de recherche</p>
+                    <a href="{% url 'products:product_list' %}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left me-2"></i>Voir tous les produits
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if products.has_other_pages %}
+            <nav aria-label="Pagination des produits" class="mt-5">
+                <ul class="pagination justify-content-center">
+                    {% if products.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ products.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in products.paginator.page_range %}
+                        {% if products.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if products.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ products.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function addToCart(productId) {
+    // Demander la taille à l'utilisateur
+    const size = prompt('Choisissez votre taille (XS, S, M, L, XL, XXL, XXXL):');
+    if (!size) return;
+    
+    // Créer le formulaire et l'envoyer
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{% url "cart:cart_add" %}';
+    
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const productIdInput = document.createElement('input');
+    productIdInput.type = 'hidden';
+    productIdInput.name = 'product_id';
+    productIdInput.value = productId;
+    
+    const sizeInput = document.createElement('input');
+    sizeInput.type = 'hidden';
+    sizeInput.name = 'size';
+    sizeInput.value = size;
+    
+    const quantityInput = document.createElement('input');
+    quantityInput.type = 'hidden';
+    quantityInput.name = 'quantity';
+    quantityInput.value = '1';
+    
+    form.appendChild(productIdInput);
+    form.appendChild(sizeInput);
+    form.appendChild(quantityInput);
+    
+    // Ajouter le token CSRF
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'csrfmiddlewaretoken';
+    csrfInput.value = csrfToken;
+    form.appendChild(csrfInput);
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>
+{% endblock %}

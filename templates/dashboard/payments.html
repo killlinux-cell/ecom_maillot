@@ -1,0 +1,228 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Paiements - Dashboard{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Paiements</li>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="mb-3">
+            <i class="fas fa-credit-card me-2 text-primary"></i>
+            Gestion des Paiements
+        </h2>
+    </div>
+</div>
+
+<!-- Statistiques -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card stat-card success">
+            <div class="card-body text-center">
+                <div class="stat-number">{{ total_payments }}</div>
+                <div class="stat-label">Total des paiements</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card info">
+            <div class="card-body text-center">
+                <div class="stat-number">{{ total_amount|floatformat:0 }}</div>
+                <div class="stat-label">Montant total (FCFA)</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card warning">
+            <div class="card-body text-center">
+                <div class="stat-number">{{ payments_by_status|length }}</div>
+                <div class="stat-label">Statuts différents</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtres -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="status" class="form-label">Statut</label>
+                        <select name="status" id="status" class="form-select">
+                            <option value="">Tous les statuts</option>
+                            <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>En attente</option>
+                            <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Terminé</option>
+                            <option value="failed" {% if status_filter == 'failed' %}selected{% endif %}>Échoué</option>
+                            <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Annulé</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="date_from" class="form-label">Date de début</label>
+                        <input type="date" name="date_from" id="date_from" class="form-control" value="{{ date_from }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="date_to" class="form-label">Date de fin</label>
+                        <input type="date" name="date_to" id="date_to" class="form-control" value="{{ date_to }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-2"></i>Filtrer
+                            </button>
+                            <a href="{% url 'dashboard:payments' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Réinitialiser
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Répartition par statut -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2 text-primary"></i>
+                    Répartition par statut
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for status in payments_by_status %}
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            {% if status.status == 'pending' %}
+                                <div class="fs-1 text-warning mb-2">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                            {% elif status.status == 'completed' %}
+                                <div class="fs-1 text-success mb-2">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                            {% elif status.status == 'failed' %}
+                                <div class="fs-1 text-danger mb-2">
+                                    <i class="fas fa-times-circle"></i>
+                                </div>
+                            {% elif status.status == 'cancelled' %}
+                                <div class="fs-1 text-secondary mb-2">
+                                    <i class="fas fa-ban"></i>
+                                </div>
+                            {% endif %}
+                            <h4 class="mb-1">{{ status.count }}</h4>
+                            <small class="text-muted">{{ status.status|title }}</small>
+                            {% if status.total_amount %}
+                                <br>
+                                <small class="text-muted">{{ status.total_amount|floatformat:0 }} FCFA</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Liste des paiements -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list me-2 text-primary"></i>
+                    Liste des paiements
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if payments %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID Paiement</th>
+                                <th>Commande</th>
+                                <th>Client</th>
+                                <th>Montant</th>
+                                <th>Statut</th>
+                                <th>Méthode</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payments %}
+                            <tr>
+                                <td>
+                                    <strong>{{ payment.payment_id }}</strong>
+                                </td>
+                                <td>
+                                    <a href="{% url 'orders:order_detail' payment.order.id %}" class="text-decoration-none">
+                                        {{ payment.order.order_number }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong>{{ payment.customer_name }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ payment.customer_email }}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="fw-bold">{{ payment.amount|floatformat:0 }} FCFA</span>
+                                </td>
+                                <td>
+                                    {% if payment.status == 'pending' %}
+                                        <span class="badge bg-warning">En attente</span>
+                                    {% elif payment.status == 'completed' %}
+                                        <span class="badge bg-success">Terminé</span>
+                                    {% elif payment.status == 'failed' %}
+                                        <span class="badge bg-danger">Échoué</span>
+                                    {% elif payment.status == 'cancelled' %}
+                                        <span class="badge bg-secondary">Annulé</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if payment.payment_method %}
+                                        <span class="badge bg-info">{{ payment.payment_method }}</span>
+                                    {% else %}
+                                        <span class="text-muted">Non spécifié</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ payment.created_at|date:"d/m/Y H:i" }}</small>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'orders:order_detail' payment.order.id %}" class="btn btn-sm btn-outline-primary" title="Voir la commande">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'admin:payments_payment_change' payment.id %}" class="btn btn-sm btn-outline-secondary" title="Modifier">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-credit-card fs-1 text-muted mb-3"></i>
+                    <p class="text-muted">Aucun paiement trouvé avec ces critères</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

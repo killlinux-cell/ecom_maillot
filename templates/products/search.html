@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+
+{% block title %}Résultats de recherche - Maillots de Football{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="fas fa-search me-2"></i>Résultats de recherche
+            </h1>
+            
+            {% if query %}
+                <p class="text-muted mb-4">
+                    Recherche pour : <strong>"{{ query }}"</strong>
+                    {% if products %}
+                        - {{ products.paginator.count }} produit(s) trouvé(s)
+                    {% endif %}
+                </p>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if products %}
+        <div class="row">
+            {% for product in products %}
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card h-100">
+                    {% if product.is_on_sale %}
+                        <span class="badge badge-sale">-{{ product.discount_percentage }}%</span>
+                    {% endif %}
+                    
+                    <div class="position-relative">
+                        {% if product.images.first %}
+                            <img src="{{ product.images.first.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 250px; object-fit: cover;">
+                        {% else %}
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 250px;">
+                                <i class="fas fa-image text-muted" style="font-size: 3rem;"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ product.name }}</h5>
+                        <p class="card-text text-muted">{{ product.team.name }}</p>
+                        
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                {% if product.is_on_sale %}
+                                    <span class="price">{{ product.current_price }} FCFA</span>
+                                    <span class="price-old">{{ product.price }} FCFA</span>
+                                {% else %}
+                                    <span class="price">{{ product.price }} FCFA</span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <a href="{{ product.get_absolute_url }}" class="btn btn-primary">
+                                    <i class="fas fa-eye me-2"></i>Voir détails
+                                </a>
+                                <button class="btn btn-outline-primary" onclick="addToCart({{ product.id }})">
+                                    <i class="fas fa-cart-plus me-2"></i>Ajouter au panier
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if products.has_other_pages %}
+        <nav aria-label="Pagination des résultats" class="mt-5">
+            <ul class="pagination justify-content-center">
+                {% if products.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?q={{ query }}&page={{ products.previous_page_number }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+                
+                {% for num in products.paginator.page_range %}
+                    {% if products.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?q={{ query }}&page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if products.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?q={{ query }}&page={{ products.next_page_number }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+    {% else %}
+        <div class="row">
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-search text-muted" style="font-size: 4rem;"></i>
+                <h3 class="mt-3">Aucun produit trouvé</h3>
+                <p class="text-muted">Essayez de modifier vos critères de recherche</p>
+                
+                <div class="mt-4">
+                    <h5>Suggestions :</h5>
+                    <ul class="list-unstyled">
+                        <li>Vérifiez l'orthographe des mots-clés</li>
+                        <li>Essayez des mots-clés plus généraux</li>
+                        <li>Essayez moins de mots-clés</li>
+                    </ul>
+                </div>
+                
+                <a href="{% url 'products:product_list' %}" class="btn btn-primary btn-lg mt-3">
+                    <i class="fas fa-arrow-left me-2"></i>Voir tous les produits
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function addToCart(productId) {
+    // Demander la taille à l'utilisateur
+    const size = prompt('Choisissez votre taille (XS, S, M, L, XL, XXL, XXXL):');
+    if (!size) return;
+    
+    // Créer le formulaire et l'envoyer
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{% url "cart:cart_add" %}';
+    
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const productIdInput = document.createElement('input');
+    productIdInput.type = 'hidden';
+    productIdInput.name = 'product_id';
+    productIdInput.value = productId;
+    
+    const sizeInput = document.createElement('input');
+    sizeInput.type = 'hidden';
+    sizeInput.name = 'size';
+    sizeInput.value = size;
+    
+    const quantityInput = document.createElement('input');
+    quantityInput.type = 'hidden';
+    quantityInput.name = 'quantity';
+    quantityInput.value = '1';
+    
+    form.appendChild(productIdInput);
+    form.appendChild(sizeInput);
+    form.appendChild(quantityInput);
+    
+    // Ajouter le token CSRF
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'csrfmiddlewaretoken';
+    csrfInput.value = csrfToken;
+    form.appendChild(csrfInput);
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>
+{% endblock %}

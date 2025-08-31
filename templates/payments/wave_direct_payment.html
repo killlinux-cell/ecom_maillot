@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+
+{% block title %}Paiement Wave Direct - {{ order.order_number }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-mobile-alt me-2"></i>
+                        Paiement Wave Direct
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Informations de la commande -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Détails de la commande</h5>
+                            <p><strong>Commande :</strong> {{ order.order_number }}</p>
+                            <p><strong>Montant :</strong> <span class="text-primary fw-bold">{{ order.total|floatformat:0 }} FCFA</span></p>
+                            <p><strong>Client :</strong> {{ order.user.first_name }} {{ order.user.last_name }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Code de paiement</h5>
+                            <div class="alert alert-info">
+                                <strong>Code :</strong> {{ payment_code }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Instructions de paiement -->
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-info-circle me-2"></i>Instructions de paiement</h6>
+                        <ol class="mb-0">
+                            <li>Ouvrez votre application <strong>Wave</strong></li>
+                            <li>Allez dans <strong>"Envoyer de l'argent"</strong></li>
+                            <li>Entrez le numéro : <strong>{{ wave_phone }}</strong></li>
+                            <li>Entrez le montant : <strong>{{ order.total|floatformat:0 }} FCFA</strong></li>
+                            <li>Dans la description, écrivez : <strong>{{ payment_code }}</strong></li>
+                            <li>Confirmez le paiement</li>
+                        </ol>
+                    </div>
+
+                    <!-- Numéro Wave -->
+                    <div class="text-center mb-4">
+                        <div class="card border-primary">
+                            <div class="card-body">
+                                <h5 class="text-primary">Numéro Wave à payer</h5>
+                                <div class="display-6 fw-bold text-primary">{{ wave_phone }}</div>
+                                <p class="text-muted">Scannez ou copiez ce numéro</p>
+                                
+                                <!-- QR Code pour le numéro Wave -->
+                                <div class="mt-3">
+                                    <div id="wave-qr-code"></div>
+                                    <small class="text-muted">QR Code pour le numéro Wave</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Boutons d'action -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-arrow-left me-2"></i>Retour à la commande
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <button type="button" class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#transactionModal">
+                                <i class="fas fa-check me-2"></i>J'ai effectué le paiement
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Informations importantes -->
+                    <div class="mt-4">
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-lightbulb me-2"></i>Important</h6>
+                            <ul class="mb-0">
+                                <li>N'oubliez pas d'inclure le <strong>code {{ payment_code }}</strong> dans la description</li>
+                                <li>Le paiement sera vérifié manuellement</li>
+                                <li>Vous recevrez une confirmation par email</li>
+                                <li>En cas de problème, contactez le support</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de saisie de l'ID de transaction -->
+<div class="modal fade" id="transactionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmer le paiement Wave</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="{% url 'payments:submit_wave_transaction' order.id %}" id="transactionForm">
+                    {% csrf_token %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Instructions :</strong> Après avoir effectué le paiement Wave, vous recevez un SMS avec un ID de transaction. Veuillez le saisir ci-dessous.
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="transaction_id" class="form-label">
+                            <strong>ID de transaction Wave *</strong>
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="transaction_id" 
+                               name="transaction_id" 
+                               placeholder="Ex: WAVE123456789" 
+                               required
+                               pattern="[A-Za-z0-9]+"
+                               title="L'ID de transaction ne doit contenir que des lettres et des chiffres">
+                        <div class="form-text">
+                            Cet ID se trouve dans le SMS de confirmation Wave que vous avez reçu après le paiement.
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="customer_phone" class="form-label">
+                            <strong>Votre numéro de téléphone *</strong>
+                        </label>
+                        <input type="tel" 
+                               class="form-control" 
+                               id="customer_phone" 
+                               name="customer_phone" 
+                               placeholder="Ex: +2250123456789" 
+                               value="{{ order.shipping_address.phone|default:'' }}"
+                               required>
+                        <div class="form-text">
+                            Le numéro utilisé pour effectuer le paiement Wave.
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Important :</strong> 
+                        <ul class="mb-0 mt-2">
+                            <li>Assurez-vous d'avoir bien effectué le paiement avant de soumettre</li>
+                            <li>L'ID de transaction sera vérifié par notre équipe</li>
+                            <li>Votre commande sera traitée une fois le paiement validé</li>
+                        </ul>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="submit" form="transactionForm" class="btn btn-success">
+                    <i class="fas fa-paper-plane me-2"></i>Soumettre le paiement
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+// Générer le QR code pour le numéro Wave
+document.addEventListener('DOMContentLoaded', function() {
+    const wavePhone = '{{ wave_phone }}';
+    const qrContainer = document.getElementById('wave-qr-code');
+    
+    QRCode.toCanvas(qrContainer, wavePhone, {
+        width: 200,
+        margin: 2,
+        color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+        }
+    }, function (error) {
+        if (error) console.error(error);
+    });
+});
+
+// Copier le numéro Wave dans le presse-papiers
+function copyWaveNumber() {
+    const wavePhone = '{{ wave_phone }}';
+    navigator.clipboard.writeText(wavePhone).then(function() {
+        alert('Numéro Wave copié !');
+    });
+}
+</script>
+{% endblock %}

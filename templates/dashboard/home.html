@@ -1,0 +1,323 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Vue d'ensemble - Dashboard{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Vue d'ensemble</li>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="mb-3">
+            <i class="fas fa-chart-line me-2 text-primary"></i>
+            Vue d'ensemble
+        </h2>
+        <p class="text-muted">Statistiques générales de votre boutique de maillots de football</p>
+    </div>
+</div>
+
+<!-- Statistiques principales -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stat-card success h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-number">{{ total_orders }}</div>
+                        <div class="stat-label">Commandes totales</div>
+                    </div>
+                    <div class="fs-1">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stat-card info h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-number">{{ total_revenue|floatformat:0 }}</div>
+                        <div class="stat-label">Chiffre d'affaires (FCFA)</div>
+                    </div>
+                    <div class="fs-1">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stat-card warning h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-number">{{ total_products }}</div>
+                        <div class="stat-label">Produits en stock</div>
+                    </div>
+                    <div class="fs-1">
+                        <i class="fas fa-tshirt"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-number">{{ total_users }}</div>
+                        <div class="stat-label">Utilisateurs inscrits</div>
+                    </div>
+                    <div class="fs-1">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistiques des 7 derniers jours -->
+<div class="row mb-4">
+    <div class="col-xl-6 col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-calendar-week me-2 text-primary"></i>
+                    Activité des 7 derniers jours
+                </h5>
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <h3 class="text-success">{{ orders_7_days }}</h3>
+                            <p class="text-muted mb-0">Nouvelles commandes</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h3 class="text-info">{{ revenue_7_days|floatformat:0 }}</h3>
+                        <p class="text-muted mb-0">FCFA générés</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-6 col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-exclamation-triangle me-2 text-warning"></i>
+                    Alertes
+                </h5>
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <h3 class="text-danger">{{ out_of_stock_products }}</h3>
+                            <p class="text-muted mb-0">Produits en rupture</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h3 class="text-warning">{{ products_on_sale }}</h3>
+                        <p class="text-muted mb-0">Produits en promotion</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Commandes par statut -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2 text-primary"></i>
+                    Répartition des commandes par statut
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for status in orders_by_status %}
+                    <div class="col-md-3 mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                {% if status.status == 'pending' %}
+                                    <span class="badge bg-warning fs-6">
+                                        <i class="fas fa-clock"></i>
+                                    </span>
+                                {% elif status.status == 'processing' %}
+                                    <span class="badge bg-info fs-6">
+                                        <i class="fas fa-cog"></i>
+                                    </span>
+                                {% elif status.status == 'shipped' %}
+                                    <span class="badge bg-primary fs-6">
+                                        <i class="fas fa-shipping-fast"></i>
+                                    </span>
+                                {% elif status.status == 'delivered' %}
+                                    <span class="badge bg-success fs-6">
+                                        <i class="fas fa-check-circle"></i>
+                                    </span>
+                                {% elif status.status == 'cancelled' %}
+                                    <span class="badge bg-danger fs-6">
+                                        <i class="fas fa-times-circle"></i>
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary fs-6">
+                                        <i class="fas fa-question"></i>
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-0">{{ status.status|title }}</h6>
+                                <small class="text-muted">{{ status.count }} commande{{ status.count|pluralize }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Produits les plus vendus -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-trophy me-2 text-warning"></i>
+                    Produits les plus vendus
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if top_products %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Produit</th>
+                                <th>Quantité vendue</th>
+                                <th>Position</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in top_products %}
+                            <tr>
+                                <td>
+                                    <strong>{{ product.product_name }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success">{{ product.total_sold }}</span>
+                                </td>
+                                <td>
+                                    {% if forloop.counter == 1 %}
+                                        <i class="fas fa-medal text-warning fs-5"></i>
+                                    {% elif forloop.counter == 2 %}
+                                        <i class="fas fa-medal text-secondary fs-5"></i>
+                                    {% elif forloop.counter == 3 %}
+                                        <i class="fas fa-medal text-danger fs-5"></i>
+                                    {% else %}
+                                        <span class="text-muted">#{{ forloop.counter }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-chart-bar fs-1 text-muted mb-3"></i>
+                    <p class="text-muted">Aucune vente enregistrée pour le moment</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Commandes récentes -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-history me-2 text-primary"></i>
+                    Commandes récentes
+                </h5>
+                <a href="{% url 'dashboard:orders' %}" class="btn btn-primary btn-sm">
+                    Voir toutes
+                </a>
+            </div>
+            <div class="card-body">
+                {% if recent_orders %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>N° Commande</th>
+                                <th>Client</th>
+                                <th>Montant</th>
+                                <th>Statut</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr>
+                                <td>
+                                    <strong>{{ order.order_number }}</strong>
+                                </td>
+                                <td>
+                                    {{ order.user.get_full_name|default:order.user.username }}
+                                </td>
+                                <td>
+                                    <span class="fw-bold">{{ order.total|floatformat:0 }} FCFA</span>
+                                </td>
+                                <td>
+                                    {% if order.status == 'pending' %}
+                                        <span class="badge bg-warning">En attente</span>
+                                    {% elif order.status == 'processing' %}
+                                        <span class="badge bg-info">En cours</span>
+                                    {% elif order.status == 'shipped' %}
+                                        <span class="badge bg-primary">Expédiée</span>
+                                    {% elif order.status == 'delivered' %}
+                                        <span class="badge bg-success">Livrée</span>
+                                    {% elif order.status == 'cancelled' %}
+                                        <span class="badge bg-danger">Annulée</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ order.created_at|date:"d/m/Y H:i" }}</small>
+                                </td>
+                                <td>
+                                    <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-shopping-cart fs-1 text-muted mb-3"></i>
+                    <p class="text-muted">Aucune commande enregistrée pour le moment</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
