@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
 {% load cart_extras %}
+{% load price_format %}
 
 {% block title %}Créer une commande - Maillots de Football{% endblock %}
 
@@ -51,7 +52,7 @@
                                                     {% if custom.custom_text %}
                                                         : "{{ custom.custom_text }}"
                                                     {% endif %}
-                                                    <span class="text-primary">(+{{ custom.price }} FCFA)</span>
+                                                    <span class="text-primary">(+{{ custom.price|price_format }})</span>
                                                 </small>
                                             {% endfor %}
                                         </div>
@@ -65,7 +66,7 @@
                         </div>
                         
                         <div class="col-md-2 text-end">
-                            <span class="price">{{ item.total_price }} FCFA</span>
+                            <span class="price">{{ item.total_price|price_format }}</span>
                         </div>
                     </div>
                     {% endfor %}
@@ -75,7 +76,7 @@
                             <strong>Sous-total:</strong>
                         </div>
                         <div class="col-md-4 text-end">
-                            <strong>{{ cart.get_total_price }} FCFA</strong>
+                            <strong>{{ cart.get_total_price|price_format }}</strong>
                         </div>
                     </div>
                     
@@ -84,7 +85,7 @@
                             <strong>Frais de livraison:</strong>
                         </div>
                         <div class="col-md-4 text-end">
-                            <strong>1000 FCFA</strong>
+                            <strong>1 000,00 FCFA</strong>
                         </div>
                     </div>
                     
@@ -95,7 +96,7 @@
                             <h5>Total:</h5>
                         </div>
                         <div class="col-md-4 text-end">
-                            <h5 class="price">{{ cart.get_total_price|add:1000 }} FCFA</h5>
+                            <h5 class="price">{{ cart.get_total_price|add:1000|price_format }}</h5>
                         </div>
                     </div>
                 </div>

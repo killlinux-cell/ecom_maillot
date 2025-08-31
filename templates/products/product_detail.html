@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load price_format %}
 
 {% block title %}{{ product.name }} - Maillots de Football{% endblock %}
 
@@ -62,10 +63,10 @@
                     
                     <div class="mb-3">
                         {% if product.is_on_sale %}
-                            <span class="price fs-3">{{ product.current_price }} FCFA</span>
-                            <span class="price-old ms-2">{{ product.price }} FCFA</span>
+                            <span class="price fs-3">{{ product.current_price|price_format }}</span>
+                            <span class="price-old ms-2">{{ product.price|price_format }}</span>
                         {% else %}
-                            <span class="price fs-3">{{ product.price }} FCFA</span>
+                            <span class="price fs-3">{{ product.price|price_format }}</span>
                         {% endif %}
                     </div>
                     

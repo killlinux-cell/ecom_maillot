@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load price_format %}
 
 {% block title %}Mon Panier - Maillots de Football{% endblock %}
 
@@ -50,7 +51,7 @@
                                             {% if custom.custom_text %}
                                                 : "{{ custom.custom_text }}"
                                             {% endif %}
-                                            <span class="text-primary">(+{{ custom.price }} FCFA)</span>
+                                            <span class="text-primary">(+{{ custom.price|price_format }})</span>
                                         </div>
                                         {% endfor %}
                                     </div>
@@ -67,7 +68,7 @@
                             </div>
                             
                             <div class="col-md-2 text-end">
-                                <span class="price">{{ item.total_price_with_customizations }} FCFA</span>
+                                <span class="price">{{ item.total_price_with_customizations|price_format }}</span>
                             </div>
                             
                             <div class="col-md-2 text-end">
@@ -96,16 +97,16 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between mb-2">
                             <span>Sous-total ({{ cart|length }} article(s)):</span>
-                            <span>{{ total_with_customizations }} FCFA</span>
+                            <span>{{ total_with_customizations|price_format }}</span>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
                             <span>Frais de livraison:</span>
-                            <span>1000 FCFA</span>
+                            <span>1 000,00 FCFA</span>
                         </div>
                         <hr>
                         <div class="d-flex justify-content-between mb-3">
                             <strong>Total:</strong>
-                            <strong class="price">{{ total_with_customizations|add:1000 }} FCFA</strong>
+                            <strong class="price">{{ total_with_customizations|add:1000|price_format }}</strong>
                         </div>
                         
                         <div class="d-grid gap-2">
@@ -120,7 +121,7 @@
                         <div class="mt-3">
                             <div class="alert alert-info">
                                 <i class="fas fa-info-circle me-2"></i>
-                                <small>Livraison gratuite pour les commandes supérieures à 50 000 FCFA</small>
+                                <small>Livraison gratuite pour les commandes supérieures à 50 000,00 FCFA</small>
                             </div>
                         </div>
                     </div>
