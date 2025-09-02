@@ -1,0 +1,5 @@
+[33m46d88ab[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m feat: Dashboard complet avec statistiques utilisateurs et corrections multiples - Ajout des statistiques détaillées des utilisateurs - Correction de l'erreur 'Invalid filter: div' - Implémentation des signaux Django pour gestion automatique du stock - Ajout du champ image aux produits - Correction des statistiques des commandes - Amélioration de l'interface utilisateur - Documentation complète des solutions
+[33m221643b[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m env update
+[33meac401e[m ok
+[33mc7c9bd9[m Create FORMATAGE_PRIX_IVOIRIEN.md
+[33mc3b7b6f[m ok
