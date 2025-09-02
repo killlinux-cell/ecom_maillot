@@ -1,0 +1,325 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Modifier le Produit - Dashboard{% endblock %}
+{% block page_title %}Modifier le Produit{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2><i class="fas fa-edit"></i> Modifier le Produit</h2>
+        <p class="text-muted">Modifiez les informations de {{ product.name }}</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'dashboard:products' %}" class="btn btn-outline-secondary btn-custom">
+            <i class="fas fa-arrow-left"></i> Retour
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-tshirt"></i> Informations du Produit</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="name" class="form-label">Nom du produit *</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   value="{{ product.name }}" required>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="category" class="form-label">Catégorie *</label>
+                            <select class="form-select" id="category" name="category" required>
+                                <option value="">Sélectionner une catégorie</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}" {% if category.id == product.category.id %}selected{% endif %}>
+                                        {{ category.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="team" class="form-label">Équipe *</label>
+                            <select class="form-select" id="team" name="team" required>
+                                <option value="">Sélectionner une équipe</option>
+                                {% for team in teams %}
+                                    <option value="{{ team.id }}" {% if team.id == product.team.id %}selected{% endif %}>
+                                        {{ team.name }} ({{ team.country }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="stock_quantity" class="form-label">Quantité en stock</label>
+                            <input type="number" class="form-control" id="stock_quantity" name="stock_quantity" 
+                                   value="{{ product.stock_quantity }}" min="0">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description *</label>
+                        <textarea class="form-control" id="description" name="description" rows="4" required>{{ product.description }}</textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="price" class="form-label">Prix normal (FCFA) *</label>
+                            <input type="number" class="form-control" id="price" name="price" 
+                                   value="{{ product.price }}" step="0.01" min="0" required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="sale_price" class="form-label">Prix en promotion (FCFA)</label>
+                            <input type="number" class="form-control" id="sale_price" name="sale_price" 
+                                   value="{{ product.sale_price|default:'' }}" step="0.01" min="0">
+                            <small class="text-muted">Laissez vide si pas de promotion</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="image" class="form-label">Image du produit</label>
+                        {% if product.image %}
+                            <div class="mb-2">
+                                <img src="{{ product.image.url }}" alt="{{ product.name }}" 
+                                     class="img-thumbnail" style="max-width: 200px;">
+                                <small class="text-muted d-block">Image actuelle</small>
+                            </div>
+                        {% endif %}
+                        <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                        <small class="text-muted">Laissez vide pour conserver l'image actuelle</small>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
+                                       {% if product.is_active %}checked{% endif %}>
+                                <label class="form-check-label" for="is_active">
+                                    Produit actif
+                                </label>
+                                <small class="form-text text-muted d-block">
+                                    Un produit inactif n'est pas visible sur le site
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured" 
+                                       {% if product.is_featured %}checked{% endif %}>
+                                <label class="form-check-label" for="is_featured">
+                                    Produit vedette
+                                </label>
+                                <small class="form-text text-muted d-block">
+                                    Affiché en évidence sur la page d'accueil
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-primary btn-custom">
+                            <i class="fas fa-save"></i> Sauvegarder les modifications
+                        </button>
+                        <a href="{% url 'dashboard:products' %}" class="btn btn-outline-secondary">
+                            Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Informations du produit -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-info-circle"></i> Informations</h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" 
+                             class="img-fluid rounded" style="max-width: 100%;">
+                    {% else %}
+                        <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                             style="height: 150px;">
+                            <i class="fas fa-image text-muted fa-2x"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <strong>Slug:</strong><br>
+                        <span class="text-muted">{{ product.slug }}</span>
+                    </li>
+                    <li class="mb-2">
+                        <strong>Catégorie:</strong><br>
+                        <span class="badge bg-primary">{{ product.category.name }}</span>
+                    </li>
+                    <li class="mb-2">
+                        <strong>Équipe:</strong><br>
+                        <span class="badge bg-info">{{ product.team.name }}</span>
+                    </li>
+                    <li class="mb-2">
+                        <strong>Prix actuel:</strong><br>
+                        <span class="fw-bold">
+                            {% if product.sale_price %}
+                                <span class="text-decoration-line-through text-muted">{{ product.price }} FCFA</span><br>
+                                <span class="text-danger">{{ product.sale_price }} FCFA</span>
+                            {% else %}
+                                {{ product.price }} FCFA
+                            {% endif %}
+                        </span>
+                    </li>
+                    <li class="mb-2">
+                        <strong>Stock:</strong><br>
+                        <span class="badge {% if product.stock_quantity > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                            {{ product.stock_quantity }}
+                        </span>
+                    </li>
+                    <li class="mb-2">
+                        <strong>Créé le:</strong><br>
+                        <span class="text-muted">{{ product.created_at|date:"d/m/Y H:i" }}</span>
+                    </li>
+                    <li class="mb-2">
+                        <strong>Modifié le:</strong><br>
+                        <span class="text-muted">{{ product.updated_at|date:"d/m/Y H:i" }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Actions rapides -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-bolt"></i> Actions Rapides</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'admin:products_product_change' product.id %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-tools"></i> Administration Django
+                    </a>
+                    
+                    <a href="{{ product.get_absolute_url }}" class="btn btn-outline-info btn-sm" target="_blank">
+                        <i class="fas fa-eye"></i> Voir sur le site
+                    </a>
+                    
+                    {% if product.is_active %}
+                        <button class="btn btn-outline-warning btn-sm" onclick="toggleProductStatus({{ product.id }}, false)">
+                            <i class="fas fa-eye-slash"></i> Désactiver
+                        </button>
+                    {% else %}
+                        <button class="btn btn-outline-success btn-sm" onclick="toggleProductStatus({{ product.id }}, true)">
+                            <i class="fas fa-eye"></i> Activer
+                        </button>
+                    {% endif %}
+                    
+                    <button class="btn btn-outline-danger btn-sm" onclick="deleteProduct({{ product.id }})">
+                        <i class="fas fa-trash"></i> Supprimer
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Statistiques rapides -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-chart-bar"></i> Statistiques</h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h4 class="text-primary">{{ product.views_count|default:0 }}</h4>
+                            <small class="text-muted">Vues</small>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-success">{{ product.orders_count|default:0 }}</h4>
+                            <small class="text-muted">Commandes</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleProductStatus(productId, activate) {
+    const action = activate ? 'activer' : 'désactiver';
+    if (confirm(`Êtes-vous sûr de vouloir ${action} ce produit ?`)) {
+        // Ici vous pouvez ajouter une requête AJAX pour changer le statut
+        console.log(`${action} le produit:`, productId);
+        
+        // Recharger la page pour voir les changements
+        location.reload();
+    }
+}
+
+function deleteProduct(productId) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce produit ? Cette action est irréversible.')) {
+        if (confirm('ATTENTION: Cette action supprimera définitivement le produit et toutes ses données. Continuer ?')) {
+            // Ici vous pouvez ajouter une requête AJAX pour supprimer le produit
+            console.log('Suppression du produit:', productId);
+            
+            // Rediriger vers la liste des produits
+            window.location.href = "{% url 'dashboard:products' %}";
+        }
+    }
+}
+
+// Validation du formulaire
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const priceInput = document.getElementById('price');
+    const salePriceInput = document.getElementById('sale_price');
+    
+    form.addEventListener('submit', function(e) {
+        const price = parseFloat(priceInput.value);
+        const salePrice = salePriceInput.value ? parseFloat(salePriceInput.value) : null;
+        
+        if (price < 0) {
+            e.preventDefault();
+            alert('Le prix ne peut pas être négatif');
+            priceInput.focus();
+            return false;
+        }
+        
+        if (salePrice !== null && salePrice < 0) {
+            e.preventDefault();
+            alert('Le prix en promotion ne peut pas être négatif');
+            salePriceInput.focus();
+            return false;
+        }
+        
+        if (salePrice !== null && salePrice >= price) {
+            e.preventDefault();
+            alert('Le prix en promotion doit être inférieur au prix normal');
+            salePriceInput.focus();
+            return false;
+        }
+    });
+    
+    // Mise à jour automatique du prix en promotion
+    priceInput.addEventListener('input', function() {
+        if (salePriceInput.value && parseFloat(salePriceInput.value) >= parseFloat(this.value)) {
+            salePriceInput.value = '';
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,242 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Gestion des Équipes - Dashboard{% endblock %}
+{% block page_title %}Gestion des Équipes{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2><i class="fas fa-users"></i> Équipes</h2>
+        <p class="text-muted">Gérez les équipes de football pour vos maillots</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <button type="button" class="btn btn-primary btn-custom" data-bs-toggle="modal" data-bs-target="#addTeamModal">
+            <i class="fas fa-plus"></i> Nouvelle Équipe
+        </button>
+    </div>
+</div>
+
+<!-- Formulaire d'ajout d'équipe -->
+<div class="modal fade" id="addTeamModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nouvelle Équipe</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Nom de l'équipe *</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="country" class="form-label">Pays *</label>
+                        <input type="text" class="form-control" id="country" name="country" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="league" class="form-label">Ligue</label>
+                        <input type="text" class="form-control" id="league" name="league" 
+                               placeholder="Ex: Premier League, La Liga, Bundesliga...">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Créer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <input type="text" class="form-control search-box" id="searchTeams" 
+                       placeholder="Rechercher une équipe...">
+            </div>
+            <div class="col-md-4">
+                <select class="form-select" id="filterCountry">
+                    <option value="">Tous les pays</option>
+                    {% for team in teams %}
+                        {% if team.country not in countries_list %}
+                            <option value="{{ team.country }}">{{ team.country }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select class="form-select" id="filterLeague">
+                    <option value="">Toutes les ligues</option>
+                    {% for team in teams %}
+                        {% if team.league and team.league not in leagues_list %}
+                            <option value="{{ team.league }}">{{ team.league }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Liste des équipes -->
+<div class="row" id="teamsContainer">
+    {% for team in teams %}
+    <div class="col-md-6 col-lg-4 mb-4 team-card" 
+         data-name="{{ team.name|lower }}" 
+         data-country="{{ team.country|lower }}"
+         data-league="{{ team.league|lower|default:'' }}">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="d-flex align-items-center">
+                        {% if team.logo %}
+                            <img src="{{ team.logo.url }}" alt="{{ team.name }}" 
+                                 class="rounded me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-light rounded d-flex align-items-center justify-content-center me-3" 
+                                 style="width: 40px; height: 40px;">
+                                <i class="fas fa-shield-alt text-muted"></i>
+                            </div>
+                        {% endif %}
+                        <div>
+                            <h5 class="card-title mb-0">{{ team.name }}</h5>
+                            <small class="text-muted">{{ team.country }}</small>
+                        </div>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'admin:products_team_change' team.id %}">
+                                <i class="fas fa-edit"></i> Modifier
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'admin:products_product_add' %}?team={{ team.id }}">
+                                <i class="fas fa-plus"></i> Ajouter un maillot
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#" onclick="deleteTeam({{ team.id }})">
+                                <i class="fas fa-trash"></i> Supprimer
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                {% if team.league %}
+                    <p class="card-text">
+                        <span class="badge bg-info">{{ team.league }}</span>
+                    </p>
+                {% endif %}
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        <i class="fas fa-tshirt"></i> 
+                        {{ team.products.count }} maillot{{ team.products.count|pluralize }}
+                    </small>
+                    <small class="text-muted">
+                        Créée le {{ team.created_at|date:"d/m/Y" }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Aucune équipe créée</h5>
+                <p class="text-muted">Commencez par créer votre première équipe de football</p>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTeamModal">
+                    <i class="fas fa-plus"></i> Créer la première équipe
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Statistiques des équipes -->
+{% if teams %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Statistiques des Équipes</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Top 5 des équipes par nombre de maillots</h6>
+                        {% for team in teams|slice:":5" %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>{{ team.name }}</span>
+                            <span class="badge bg-primary">{{ team.products.count }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Répartition par pays</h6>
+                        {% regroup teams by country as country_list %}
+                        {% for country in country_list %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>{{ country.grouper }}</span>
+                            <span class="badge bg-success">{{ country.list|length }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+// Filtrage des équipes
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchTeams');
+    const countryFilter = document.getElementById('filterCountry');
+    const leagueFilter = document.getElementById('filterLeague');
+    const teamsContainer = document.getElementById('teamsContainer');
+    const teamCards = document.querySelectorAll('.team-card');
+
+    function filterTeams() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedCountry = countryFilter.value.toLowerCase();
+        const selectedLeague = leagueFilter.value.toLowerCase();
+
+        teamCards.forEach(card => {
+            const name = card.dataset.name;
+            const country = card.dataset.country;
+            const league = card.dataset.league;
+
+            const matchesSearch = name.includes(searchTerm);
+            const matchesCountry = !selectedCountry || country === selectedCountry;
+            const matchesLeague = !selectedLeague || league === selectedLeague;
+
+            if (matchesSearch && matchesCountry && matchesLeague) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    searchInput.addEventListener('input', filterTeams);
+    countryFilter.addEventListener('change', filterTeams);
+    leagueFilter.addEventListener('change', filterTeams);
+});
+
+function deleteTeam(teamId) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette équipe ? Cette action est irréversible.')) {
+        // Ici vous pouvez ajouter la logique de suppression AJAX
+        console.log('Suppression de l\'équipe:', teamId);
+    }
+}
+</script>
+{% endblock %}

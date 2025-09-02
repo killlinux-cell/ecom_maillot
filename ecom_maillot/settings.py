@@ -156,6 +156,12 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
+# Configuration WhiteNoise pour servir les fichiers statiques en production
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Configuration pour l'admin Django
+ADMIN_MEDIA_PREFIX = '/static/admin/'
+
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'

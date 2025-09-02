@@ -1,0 +1,242 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Modifier l'Utilisateur - Dashboard{% endblock %}
+{% block page_title %}Modifier l'Utilisateur{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2><i class="fas fa-user-edit"></i> Modifier l'Utilisateur</h2>
+        <p class="text-muted">Modifiez les informations de {{ user.get_full_name|default:user.username }}</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'dashboard:users' %}" class="btn btn-outline-secondary btn-custom">
+            <i class="fas fa-arrow-left"></i> Retour
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-user-cog"></i> Informations de l'Utilisateur</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="username" class="form-label">Nom d'utilisateur *</label>
+                            <input type="text" class="form-control" id="username" name="username" 
+                                   value="{{ user.username }}" readonly>
+                            <small class="text-muted">Le nom d'utilisateur ne peut pas être modifié</small>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">Email *</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ user.email }}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="first_name" class="form-label">Prénom</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" 
+                                   value="{{ user.first_name }}">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="last_name" class="form-label">Nom de famille</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" 
+                                   value="{{ user.last_name }}">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">Nouveau mot de passe</label>
+                        <input type="password" class="form-control" id="new_password" name="new_password" 
+                               placeholder="Laissez vide pour ne pas changer">
+                        <small class="text-muted">Laissez vide si vous ne voulez pas changer le mot de passe</small>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
+                                       {% if user.is_active %}checked{% endif %}>
+                                <label class="form-check-label" for="is_active">
+                                    Compte actif
+                                </label>
+                                <small class="form-text text-muted d-block">
+                                    Un compte inactif ne peut pas se connecter
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_staff" name="is_staff" 
+                                       {% if user.is_staff %}checked{% endif %}>
+                                <label class="form-check-label" for="is_staff">
+                                    Accès au staff
+                                </label>
+                                <small class="form-text text-muted d-block">
+                                    Peut accéder à l'interface d'administration
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-primary btn-custom">
+                            <i class="fas fa-save"></i> Sauvegarder les modifications
+                        </button>
+                        <a href="{% url 'dashboard:users' %}" class="btn btn-outline-secondary">
+                            Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Informations de l'utilisateur -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-info-circle"></i> Informations</h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" alt="{{ user.username }}" 
+                             class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;">
+                    {% else %}
+                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center mx-auto" 
+                             style="width: 80px; height: 80px;">
+                            <span class="text-white fw-bold fs-4">{{ user.username|first|upper }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <strong>Nom d'utilisateur:</strong><br>
+                        <span class="text-muted">{{ user.username }}</span>
+                    </li>
+                    <li class="mb-2">
+                        <strong>Email:</strong><br>
+                        <span class="text-muted">{{ user.email }}</span>
+                    </li>
+                    <li class="mb-2">
+                        <strong>Nom complet:</strong><br>
+                        <span class="text-muted">
+                            {% if user.first_name or user.last_name %}
+                                {{ user.first_name }} {{ user.last_name }}
+                            {% else %}
+                                Non renseigné
+                            {% endif %}
+                        </span>
+                    </li>
+                    <li class="mb-2">
+                        <strong>Date d'inscription:</strong><br>
+                        <span class="text-muted">{{ user.date_joined|date:"d/m/Y H:i" }}</span>
+                    </li>
+                    <li class="mb-2">
+                        <strong>Dernière connexion:</strong><br>
+                        <span class="text-muted">
+                            {% if user.last_login %}
+                                {{ user.last_login|date:"d/m/Y H:i" }}
+                            {% else %}
+                                Jamais
+                            {% endif %}
+                        </span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Actions rapides -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-bolt"></i> Actions Rapides</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'admin:auth_user_change' user.id %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-tools"></i> Administration Django
+                    </a>
+                    
+                    {% if user.is_active %}
+                        <button class="btn btn-outline-warning btn-sm" onclick="toggleUserStatus({{ user.id }}, false)">
+                            <i class="fas fa-user-slash"></i> Désactiver le compte
+                        </button>
+                    {% else %}
+                        <button class="btn btn-outline-success btn-sm" onclick="toggleUserStatus({{ user.id }}, true)">
+                            <i class="fas fa-user-check"></i> Activer le compte
+                        </button>
+                    {% endif %}
+                    
+                    <button class="btn btn-outline-danger btn-sm" onclick="deleteUser({{ user.id }})">
+                        <i class="fas fa-trash"></i> Supprimer l'utilisateur
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleUserStatus(userId, activate) {
+    const action = activate ? 'activer' : 'désactiver';
+    if (confirm(`Êtes-vous sûr de vouloir ${action} cet utilisateur ?`)) {
+        // Ici vous pouvez ajouter une requête AJAX pour changer le statut
+        console.log(`${action} l'utilisateur:`, userId);
+        
+        // Recharger la page pour voir les changements
+        location.reload();
+    }
+}
+
+function deleteUser(userId) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.')) {
+        if (confirm('ATTENTION: Cette action supprimera définitivement l\'utilisateur et toutes ses données. Continuer ?')) {
+            // Ici vous pouvez ajouter une requête AJAX pour supprimer l'utilisateur
+            console.log('Suppression de l\'utilisateur:', userId);
+            
+            // Rediriger vers la liste des utilisateurs
+            window.location.href = "{% url 'dashboard:users' %}";
+        }
+    }
+}
+
+// Validation du formulaire
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const emailInput = document.getElementById('email');
+    
+    form.addEventListener('submit', function(e) {
+        if (!emailInput.value.trim()) {
+            e.preventDefault();
+            alert('L\'email est obligatoire');
+            emailInput.focus();
+            return false;
+        }
+        
+        // Validation basique de l'email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(emailInput.value)) {
+            e.preventDefault();
+            alert('Veuillez entrer un email valide');
+            emailInput.focus();
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %}

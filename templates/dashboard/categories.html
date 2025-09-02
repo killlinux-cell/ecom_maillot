@@ -1,0 +1,155 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Gestion des Catégories - Dashboard{% endblock %}
+{% block page_title %}Gestion des Catégories{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2><i class="fas fa-tags"></i> Catégories</h2>
+        <p class="text-muted">Gérez les catégories de vos maillots</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <button type="button" class="btn btn-primary btn-custom" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+            <i class="fas fa-plus"></i> Nouvelle Catégorie
+        </button>
+    </div>
+</div>
+
+<!-- Formulaire d'ajout de catégorie -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nouvelle Catégorie</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Nom de la catégorie *</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Créer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Liste des catégories -->
+<div class="row">
+    {% for category in categories %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="card-title mb-0">{{ category.name }}</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'admin:products_category_change' category.id %}">
+                                <i class="fas fa-edit"></i> Modifier
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'admin:products_product_add' %}?category={{ category.id }}">
+                                <i class="fas fa-plus"></i> Ajouter un produit
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#" onclick="deleteCategory({{ category.id }})">
+                                <i class="fas fa-trash"></i> Supprimer
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                {% if category.description %}
+                    <p class="card-text text-muted">{{ category.description|truncatewords:20 }}</p>
+                {% else %}
+                    <p class="text-muted"><em>Aucune description</em></p>
+                {% endif %}
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        <i class="fas fa-tshirt"></i> 
+                        {{ category.products.count }} produit{{ category.products.count|pluralize }}
+                    </small>
+                    <small class="text-muted">
+                        Créée le {{ category.created_at|date:"d/m/Y" }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-tags fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Aucune catégorie créée</h5>
+                <p class="text-muted">Commencez par créer votre première catégorie de maillots</p>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                    <i class="fas fa-plus"></i> Créer la première catégorie
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Statistiques des catégories -->
+{% if categories %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Statistiques des Catégories</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for category in categories %}
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ category.name }}</h6>
+                                <small class="text-muted">{{ category.products.count }} produit{{ category.products.count|pluralize }}</small>
+                            </div>
+                            <div class="progress flex-grow-1 mx-3" style="height: 8px;">
+                                {% if categories|length > 0 %}
+                                    {% with total_products=0 %}
+                                        {% for cat in categories %}
+                                            {% with total_products=total_products|add:cat.products.count %}{% endwith %}
+                                        {% endfor %}
+                                        <div class="progress-bar" style="width: {% widthratio category.products.count total_products 100 %}%"></div>
+                                    {% endwith %}
+                                {% endif %}
+                            </div>
+                            <span class="badge bg-primary">{{ category.products.count }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+function deleteCategory(categoryId) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ? Cette action est irréversible.')) {
+        // Ici vous pouvez ajouter la logique de suppression AJAX
+        console.log('Suppression de la catégorie:', categoryId);
+    }
+}
+</script>
+{% endblock %}

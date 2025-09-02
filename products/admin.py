@@ -34,7 +34,7 @@ class ProductAdmin(admin.ModelAdmin):
     inlines = [ProductImageInline]
     fieldsets = (
         ('Informations générales', {
-            'fields': ('name', 'slug', 'category', 'team', 'description')
+            'fields': ('name', 'slug', 'image', 'category', 'team', 'description')
         }),
         ('Prix et stock', {
             'fields': ('price', 'sale_price', 'stock_quantity', 'available_sizes')
