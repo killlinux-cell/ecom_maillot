@@ -14,3 +14,8 @@ from django.core.wsgi import get_wsgi_application
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ecom_maillot.settings')
 
 application = get_wsgi_application()
+
+# Configuration WhiteNoise pour servir les fichiers statiques en production
+from whitenoise import WhiteNoise
+application = WhiteNoise(application, root='staticfiles/')
+application.add_files('media/', prefix='media/')
